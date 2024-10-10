@@ -25,8 +25,15 @@ A full-stack chat application with real-time messaging features. This project co
 
 ## Installation
 
-### Backend
 1. Clone the repository:
    ```bash
    git clone https://github.com/salub-xd/chat-app.git
    cd chat-app
+### Frontend:
+     cd frontend
+     npm i
+     npm run dev
+### Backend:
+     cd backend
+     npm i
+     npm start
