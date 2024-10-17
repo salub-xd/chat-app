@@ -4,15 +4,23 @@ import cors from 'cors';
 import { Server as SocketIOServer } from 'socket.io';
 import cookieParser from 'cookie-parser';
 import userRouter from './routes/userRoute';
+import messageRouter from './routes/messageRoute';
 import prisma from './prisma';
+import JWTService from './middleware/jwt';
+import { socket } from './socket/socket';
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }));
-app.use(cors());
+
+app.use(cors({
+    origin: 'http://localhost:3000', // Frontend origin
+    credentials: true, // Allow credentials (cookies, HTTP authentication, etc.)
+}));
 app.use('/userapi', userRouter);
+app.use('/api', messageRouter);
 
 const PORT = process.env.PORT;
 
@@ -28,42 +36,56 @@ app.get('/', (req: any, res: any) => {
     res.send('<h1>Hello world</h1>');
 });
 
+// io.on('connection', (socket) => {
+//     const token = socket.handshake.auth.token;
+//     const jwtVerification = JWTService.decodeToken(token);
+//     if (!jwtVerification) {
+//         socket.emit('error', 'User Unauthorized');
+//         socket.disconnect();
+//         return;
+//     }
 
-io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
+//     const userId = jwtVerification.id;
+//     console.log(`User ${userId} connected:`, socket.id);
 
-    // Listening for "send_message" event
-    socket.on('send_message', async (data) => {
-        const { senderId, receiverId, message } = data;
+//     // Debug the `join` event
+//     socket.on('join', (data) => {
+//         console.log('Join event data:', data); // Add this to log the received data
+//         const { userId, receiverId } = data;  // Make sure data contains these fields
+//         const roomId = [userId, receiverId].sort().join('_');
+//         socket.join(roomId);
+//         console.log(`User ${userId} has joined room: ${roomId}`);
+//     });
 
-        try {
-            // Save the message to the database using Prisma
-            const chatMessage = await prisma.message.create({
-                data: {
-                    message,
-                    senderId,
-                    receiverId,
-                }
-            });
+//     socket.on('send_message', async (data) => {
+//         const { senderId, receiverId, message } = data;
 
-            // Emit the message to the receiver's socket
-            io.to(receiverId).emit('receive_message', chatMessage);
+//         try {
+//             const chatMessage = await prisma.message.create({
+//                 data: {
+//                     message,
+//                     senderId,
+//                     receiverId,
+//                 }
+//             });
 
-            // Acknowledge the sender
-            socket.emit('message_sent', chatMessage);
+//             const roomId = [senderId, receiverId].sort().join('_');
+//             io.to(roomId).emit('receive_message', chatMessage);
 
-        } catch (error) {
-            console.error("Error saving message:", error);
-            socket.emit('error', 'Error sending message');
-        }
-    });
+//             socket.emit('message_sent', chatMessage);
+//         } catch (error) {
+//             console.error("Error saving message:", error);
+//             socket.emit('error', 'Error sending message');
+//         }
+//     });
 
-    // Handle user disconnect
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-    });
-});
+//     socket.on('disconnect', () => {
+//         console.log('User disconnected:', socket.id);
+//     });
+// });
+
+socket(io);
 
 server.listen(PORT || 3000, () => {
-    console.log('listening on :3000');
+    console.log(`listening on : ${PORT}`);
 });

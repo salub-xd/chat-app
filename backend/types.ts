@@ -1,3 +1,4 @@
+import * as express from 'express';
 
 export interface GoogleTokenResult {
     iss?: string;
@@ -17,4 +18,15 @@ export interface GoogleTokenResult {
     alg?: string;
     kid?: string;
     typ?: string;
+  }
+
+  declare global {
+    namespace Express {
+      interface Request {
+        user?: {
+          id:string;
+          email:string;
+        }; // Replace User with your actual user type or interface
+      }
+    }
   }

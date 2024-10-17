@@ -22,9 +22,12 @@ import { useState, useTransition } from 'react';
 import { register } from '@/actions/register';
 import { ClipLoader } from 'react-spinners';
 import { BsGoogle } from 'react-icons/bs';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 const RegisterForm = () => {
 
+    const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [isError, setIsError] = useState<string | undefined>("");
     const [isSuccess, setIsSuccess] = useState<string | undefined>("");
@@ -33,7 +36,7 @@ const RegisterForm = () => {
         resolver: zodResolver(RegisterSchema),
         defaultValues: {
             name: "",
-            username:"",
+            username: "",
             email: '',
             password: '',
         }
@@ -44,26 +47,36 @@ const RegisterForm = () => {
         setIsSuccess("");
         startTransition(() => {
             register(values).then((data) => {
-                setIsSuccess(data.success)
-                setIsError(data.error)
+                if (data?.error) {
+                    // form.reset();
+                    setIsError(data?.error)
+                }
+                // console.log(data);
+                if (data?.success) {
+                    setIsSuccess(data?.success)
+                    router.push('/login');
+                    form.reset();
+                }
+            }).catch(() => {
+                setIsError("Something went wrong")
             })
         });
     }
-    
+
     return (
         <div className="mt-20 mb-20 max-w-md mx-4 px-4 py-8 border rounded-md sm:mx-auto">
-                        <Button
-                            type="button"
-                            className="w-full ">
-                            <BsGoogle className="mr-2" /> Sign up with Google
-                        </Button>
-                    <div className="flex items-center justify-center my-4">
-                        <div className="border-t border-gray-300 flex-grow"></div>
-                        <span className="mx-2 text-sm text-gray-500">OR CONTINUE WITH</span>
-                        <div className="border-t border-gray-300 flex-grow"></div>
-                    </div>
+            <Button
+                type="button"
+                className="w-full ">
+                <BsGoogle className="mr-2" /> Sign up with Google
+            </Button>
+            <div className="flex items-center justify-center my-4">
+                <div className="border-t border-gray-300 flex-grow"></div>
+                <span className="mx-2 text-sm text-gray-500">OR CONTINUE WITH</span>
+                <div className="border-t border-gray-300 flex-grow"></div>
+            </div>
             <h2 className="text-2xl font-semibold mb-4">Create an account</h2>
-                    
+
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     <FormField
@@ -115,6 +128,17 @@ const RegisterForm = () => {
                                     <Input disabled={isPending} type='password' placeholder="******" {...field} />
                                 </FormControl>
                                 <FormMessage />
+                                <Button
+                                    disabled={isPending}
+                                    size={"sm"}
+                                    variant={"link"}
+                                    className='flex items-center justify-center p-0 font-normal'>
+                                    <Link
+                                        href={'/login'}
+                                    >
+                                        Dont have account?
+                                    </Link>
+                                </Button>
                             </FormItem>
                         )}
                     />
@@ -124,7 +148,6 @@ const RegisterForm = () => {
                         {isPending && <ClipLoader color="black" size={20} className="mr-2" />}
                         Create an Account
                     </Button>
-                  
                 </form>
             </Form>
         </div>

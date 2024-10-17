@@ -76,8 +76,8 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const jwtToken = JWTService.generateTokenForUser(user);
 
     res.cookie('token', jwtToken, {
-      httpOnly: true, // Prevents access by JavaScript
-      secure: process.env.NODE_ENV === 'production', // Ensure cookie is only sent over HTTPS in production
+      // httpOnly: true, // Prevents access by JavaScript
+      // secure: process.env.NODE_ENV === 'production', // Ensure cookie is only sent over HTTPS in production
       sameSite: 'strict', // Helps with CSRF protection
       maxAge: 60 * 60 * 1000 // Token expiry: 1 hour
     });

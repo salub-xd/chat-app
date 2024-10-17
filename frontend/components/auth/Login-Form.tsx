@@ -19,15 +19,17 @@ import {
 import { Input } from "@/components/ui/input"
 import { FormError } from '@/components/auth/form-error';
 import { FormSuccess } from '@/components/auth/form-success';
-import { login } from '@/actions/login';
-import { useState, useTransition } from 'react';
-import { useSearchParams } from 'next/navigation';
+// import { login } from '@/actions/login';
+import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ClipLoader } from 'react-spinners';
 import { BsGoogle } from 'react-icons/bs';
+import axios from 'axios';
 
 const LoginForm = () => {
 
+    const router = useRouter();
     const searchParams = useSearchParams();
     const urlError = searchParams.get("error") === "OAuthAccountNotLinked"
         ? "Email already in use with different provider!"
@@ -35,7 +37,7 @@ const LoginForm = () => {
 
     // const [showTwoFactor, setShowTwoFactor] = useState(false);
 
-    const [isPending, startTransition] = useTransition();
+    const [isPending, setIsPending] = useState<boolean | undefined>();
     const [isError, setIsError] = useState<string | undefined>("");
     const [isSuccess, setIsSuccess] = useState<string | undefined>("");
 
@@ -50,22 +52,29 @@ const LoginForm = () => {
     const onSubmit = async (values: z.infer<typeof LoginSchema>) => {
         setIsError("");
         setIsSuccess("");
-        startTransition(() => {
-            login(values).then((data) => {
-                if (data?.error) {
-                    form.reset();
-                    setIsError(data?.error)
-                }
-                // if (data?.success) {
-                //     form.reset();
-                //     setIsSuccess(data?.success)
-                // }
-            }).catch(() => {
-                setIsError("Something went wrong")
-            })
-        });
+        try {
+            setIsPending(true);
+            await axios.post(`http://localhost:5000/userapi/loginuser`, { email: values.email, password: values.password }, { withCredentials: true });
+            // const data =  response;
+            // setIsSuccess(response.data?.success);
+            setIsSuccess("User login sucessfully");
+            form.reset();
+            router.push('/');
+            setIsPending(false);
 
-    }
+        } catch (error: any) {
+            if (error.response && error.response.data) {
+                // Return error message from the backend
+                setIsError(error.response.data.error)
+            } else {
+                // Return generic error message
+                setIsError('Something went wrong!')
+            }
+            setIsPending(false);
+        }
+    };
+
+
     return (
         <div className="mt-20 mb-20 max-w-md mx-4 px-4 py-8 border rounded-md sm:mx-auto">
             <h2 className="text-2xl font-semibold mb-4">Login</h2>
@@ -136,7 +145,6 @@ const LoginForm = () => {
                         <div className="border-t border-gray-300 flex-grow"></div>
                     </div>
                     <Button
-                        type="button"
                         className="w-full ">
                         <BsGoogle className="mr-2" /> Sign in with Google
                     </Button>
