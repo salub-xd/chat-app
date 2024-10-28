@@ -8,6 +8,7 @@ import messageRouter from './routes/messageRoute';
 import prisma from './prisma';
 import JWTService from './middleware/jwt';
 import { socket } from './socket/socket';
+import verify from './middleware/verify';
 
 const app = express();
 
@@ -28,7 +29,7 @@ const server = http.createServer(app);
 const io = new SocketIOServer(server, {
     cors: {
         origin: "*",
-        methods: ["GET", "POST"]
+        methods: ["GET", "POST", "PATCH", "DELETE"]
     }
 });
 
@@ -83,6 +84,23 @@ app.get('/', (req: any, res: any) => {
 //         console.log('User disconnected:', socket.id);
 //     });
 // });
+
+// io.use((socket, next) => {
+//     const token = socket.handshake.auth.token;
+//     // console.log("Token :" ,token);
+    
+
+//     const data = JWTService.decodeToken(token); // Decode or verify the token
+//     if (!data) {
+//          next(new Error("Authentication Error!"));
+//     }
+
+//     // console.log("data : ",data);
+    
+
+//     next();
+
+// })
 
 socket(io);
 

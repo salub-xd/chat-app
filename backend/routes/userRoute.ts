@@ -10,19 +10,22 @@ import {
     searchUserById,
     searchUserByUsername,
     searchUserByName,
-    getAllUsers
+    getAllUsers,
+    userDetails
 } from '../controllers/UserController';
+import verify from "../middleware/verify";
 
 
 router.route('/registeruser').post(registerUser);
 router.route('/loginuser').post(loginUser);
-router.route('/edituser/:id').patch(editUser);
-router.route('/deleteuser/:id').delete(deleteUser);
+router.route('/edituser/:id').patch(verify,editUser);
+router.route('/deleteuser/:id').delete(verify,deleteUser);
 router.route('/auth/google').delete(googleAuth);
-router.route('/search/id/:id').get(searchUserById);
-router.route('/search/username/:username').get(searchUserByUsername);
-router.route('/search/name').get(searchUserByName);
-router.route('/users').get(getAllUsers);
+router.route('/search/id/:id').get(verify,searchUserById);
+router.route('/search/username/:username').get(verify,searchUserByUsername);
+router.route('/search/name').get(verify,searchUserByName);
+router.route('/users').get(verify,getAllUsers);
+router.route('/userDetails').get(verify,userDetails);
 
 
 export default router;

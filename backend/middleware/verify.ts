@@ -1,19 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
 import JWTService from './jwt';
 
-async function verify(req: Request, res: Response, next: NextFunction) {
-    const authHeader = req.headers.authorization;
+async function verify(req: Request, res: Response, next: NextFunction): Promise<void> {
+    const authHeader = req.cookies.token;
+    // console.log(req.headers);
+    // console.log(req.headers.token);
+    // console.log("cookies :",req.cookies);
+    // console.log("cookies :",req.cookies.token);
 
+    
     try {
         if (!authHeader) {
-            return res.status(401).json({ error: "Authorization header not found" });
+            res.status(401).json({ error: "Token header not found" });
+            return;
         }
 
-        const token = authHeader.split(' ')[1]; // Extract the token (usually "Bearer <token>")
+        const token = authHeader.toString();
 
         const data = JWTService.decodeToken(token); // Decode or verify the token
         if (!data) {
-            return res.status(401).json({ error: "Invalid token" });
+            res.status(401).json({ error: "Invalid token" });
+            return;
+
         }
 
         // Assuming the decoded token contains the user object
@@ -21,7 +29,8 @@ async function verify(req: Request, res: Response, next: NextFunction) {
 
         next();
     } catch (err) {
-        return res.status(401).json({ error: "Unauthorized access" });
+        res.status(401).json({ error: "Unauthorized access" });
+        return;
     }
 }
 

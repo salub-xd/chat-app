@@ -76,9 +76,9 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     const jwtToken = JWTService.generateTokenForUser(user);
 
     res.cookie('token', jwtToken, {
-      // httpOnly: true, // Prevents access by JavaScript
+      httpOnly: true, // Prevents access by JavaScript
       // secure: process.env.NODE_ENV === 'production', // Ensure cookie is only sent over HTTPS in production
-      sameSite: 'strict', // Helps with CSRF protection
+      // sameSite: 'strict', // Helps with CSRF protection
       maxAge: 60 * 60 * 1000 // Token expiry: 1 hour
     });
 
@@ -91,7 +91,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         bio: user.bio,
       }
     });
-    
+
   } catch (error) {
     res.status(500).json({ error: 'Something went wrong' });
   }
@@ -103,9 +103,9 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
 
   try {
     // Verify the JWT token from the request headers
-    const token = req.cookies.token; 
-    const decodedToken = JWTService.decodeToken(token); 
-    const loggedInUserId = decodedToken?.id; 
+    const token = req.cookies.token;
+    const decodedToken = JWTService.decodeToken(token);
+    const loggedInUserId = decodedToken?.id;
 
     if (loggedInUserId !== id) {
       res.status(403).json({ error: 'You do not have permission to edit this user.' });
@@ -165,9 +165,9 @@ export const editUser = async (req: Request, res: Response): Promise<void> => {
 
 export const deleteUser = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const token = req.cookies.token; 
-  const decodedToken = JWTService.decodeToken(token); 
-  const userIdFromToken = decodedToken?.id; 
+  const token = req.cookies.token;
+  const decodedToken = JWTService.decodeToken(token);
+  const userIdFromToken = decodedToken?.id;
 
   if (!id) {
     res.status(400).json({ error: 'Invalid user ID' });
@@ -184,7 +184,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
-    if (userIdFromToken !== userToDelete.id ) { 
+    if (userIdFromToken !== userToDelete.id) {
       res.status(403).json({ error: 'Forbidden: You do not have permission to delete this user.' });
       return;
     }
@@ -196,7 +196,7 @@ export const deleteUser = async (req: Request, res: Response): Promise<void> => 
     res.status(200).json({ message: "User deleted successfully!" });
 
   } catch (error) {
-    console.error("Error deleting user:", error); 
+    console.error("Error deleting user:", error);
     res.status(500).json({ error: 'Internal server error' });
   }
 
@@ -217,9 +217,43 @@ export const searchUserById = async (req: Request, res: Response): Promise<void>
 
     res.status(200).json({ user });
   } catch (error) {
-    res.status(500).json({ error: 'Something went wrong' });
+    res.status(500).json({ error: 'Error fetching users details!' });
   }
 };
+
+export const userDetails = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.user?.id;
+  try {
+
+    if (!userId) {
+      res.status(404).json({ error: 'UserId not found' });
+      return;
+    }
+
+    const userDetails = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      }
+    });
+
+    if (!userDetails) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.status(200).json({
+      id:userDetails.id,
+      name: userDetails.name,
+      username: userDetails.username,
+      email: userDetails.email,
+      image: userDetails.image,
+      bio: userDetails.bio,
+    });
+
+  } catch (error) {
+    res.status(500).json({ error: 'Error fetching users details!' });
+  }
+}
 
 export const searchUserByUsername = async (req: Request, res: Response): Promise<void> => {
   const { username } = req.params;
@@ -349,7 +383,7 @@ export const googleAuth = async (req: Request, res: Response): Promise<void> => 
         bio: user.bio,
       }
     });
-    
+
 
   } catch (error) {
     console.error("Google Auth Error:", error);
