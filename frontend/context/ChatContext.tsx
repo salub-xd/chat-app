@@ -51,6 +51,8 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     const userId = user?.id;
 
     useEffect(() => {
+        console.log(socket,userId);
+        
         if (!socket || !userId) return;
 
         console.log("Setting up socket listeners");

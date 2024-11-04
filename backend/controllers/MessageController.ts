@@ -36,8 +36,8 @@ export const userContact = async (req: Request, res: Response): Promise<void> =>
     // Prepare contacts data with last message details and unseen messages count
     const contacts = await Promise.all(contactIds.map(async (contactId) => {
       // Get the last message for the contact
-      const lastMessageData = userMessages.find((message: any) => 
-        (message.senderId === id && message.receiverId === contactId) || 
+      const lastMessageData = userMessages.find((message: any) =>
+        (message.senderId === id && message.receiverId === contactId) ||
         (message.senderId === contactId && message.receiverId === id)
       );
 
@@ -78,6 +78,157 @@ export const userContact = async (req: Request, res: Response): Promise<void> =>
   } catch (error) {
     console.error("Error fetching user contacts: ", error);
     res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
+
+
+export const getConversations = async (req: Request, res: Response): Promise<void> => {
+  const { userId } = req.query;
+  try {
+    console.log(userId);
+
+    // Check if userId and receiverId are provided
+    if (!userId) {
+      res.status(400).json({ error: 'Both userId and receiverId are required' });
+      return;
+    }
+
+    const conversations = await prisma.conversation.findMany({
+      where: {
+        ConversationUser: {
+          some: {
+            userId: userId,
+          },
+        },
+      },
+      include: {
+        ConversationUser: {
+          where: {
+            userId: {
+              not: userId, // Exclude User A to get only the other participants
+            },
+          },
+          select: {
+            user: {
+              select:{
+                id:true,
+                name:true,
+                username:true,
+                bio:true,
+                image:true,
+              }
+            },
+          },
+        },
+        lastMessage:true,
+      },
+      orderBy:{
+        createdAt:'asc'
+      }      
+    });
+    res.status(200).json(conversations);
+
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+}
+
+
+export const conversation = async (req: Request, res: Response): Promise<void> => {
+  const { userId, receiverId } = req.query;
+  try {
+    console.log(userId, receiverId);
+
+    // Check if userId and receiverId are provided
+    if (!userId || !receiverId) {
+      res.status(400).json({ error: 'Both userId and receiverId are required' });
+      return;
+    }
+
+    let conversation = await prisma.conversation.findFirst({
+      where: {
+        AND: [
+          {
+            ConversationUser: {
+              some: {
+                userId: userId,
+              }
+            },
+          },
+          {
+            ConversationUser: {
+              some: {
+                userId: receiverId,
+              }
+            },
+          }
+        ],
+      },
+    });
+
+    if (!conversation) {
+      conversation = await prisma.conversation.create({
+        data: {
+          ConversationUser: {
+            create: [
+              {
+                userId: userId
+              },
+              {
+                userId: receiverId
+              },
+            ]
+          }
+        }
+      });
+    };
+
+    res.status(200).json(conversation);
+
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ error: 'Something went wrong' });
+  }
+}
+
+// Route to get messages by conversationId
+export const getMessages = async (req: Request, res: Response): Promise<void> => {
+  const { conversationId } = req.query;
+  try {
+    // Check if conversationId is provided
+    if (!conversationId) {
+      res.status(400).json({ error: 'Conversation ID is required' });
+      return;
+    }
+
+    // Find messages related to the specified conversationId
+    const messages = await prisma.message.findMany({
+      where: {
+        conversationId: conversationId
+      },
+      include: {
+        sender: { 
+          select: {
+            id: true,
+            name: true,
+            username: true,
+            image: true
+          }
+        },
+        Reaction:true
+      },
+      orderBy: {
+        createdAt: "asc"
+      }
+    });
+    
+
+    res.status(200).json(messages);
+  } catch (error) {
+    console.error("Error fetching messages:", error);
+    res.status(500).json({ error: 'Something went wrong' });
   }
 };
 

@@ -1,24 +1,22 @@
 'use client';
 
-import React, { useContext } from 'react';
+import React, { useEffect } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 // import { useRouter } from 'next/navigation';
 // // import axios from 'axios';
 // import { jwtDecode } from 'jwt-decode';
 // import Cookies from 'js-cookie';
 import { format } from 'date-fns'
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/redux/store';
+import { conversations, fetchAllConversations, setSelectedConversation, setSelectedConversationId } from '@/redux/reducers/chat';
+import { cn } from '@/lib/utils';
+import { FaUser } from 'react-icons/fa';
+import { selectUser } from '@/redux/reducers/auth';
+import { Conversations, User } from '@/types';
 // import useSocket from '@/hooks/useSocket';
-import { ChatContext } from '@/context/ChatContext';
+// import { ChatContext } from '@/context/ChatContext';
 
-// interface ChatUser {
-//   id: string;
-//   name: string;
-//   image: string;
-//   lastMessage: string;
-//   unseenMessagesCount: number;
-//   isRead: boolean;
-//   lastMessageTime: string;
-// }
 
 // interface DecodedToken {
 //   id: string;
@@ -26,9 +24,9 @@ import { ChatContext } from '@/context/ChatContext';
 // }
 
 const ChatContact = () => {
-  const { chatUsers,fetchMessagesSelectUser } = useContext(ChatContext)!;
-  console.log(chatUsers);
-  
+  // const { chatUsers,fetchMessagesSelectUser } = useContext(ChatContext)!;
+  // console.log(chatUsers);
+
 
   // const [chatUsers, setChatUsers] = useState<ChatUser[]>([]);
   // const router = useRouter();
@@ -94,49 +92,75 @@ const ChatContact = () => {
   //   }
   // }, [userId, socket]);
 
+  const user: User = useSelector(selectUser);
+  const chats: Conversations[] = useSelector(conversations);
+  // const conversationUser = useSelector((state: RootState) => state.chat.selectedConversation);
+  const conversationUserId = useSelector((state: RootState) => state.chat.selectedConversationId);
+  const dispatch = useDispatch<AppDispatch>();
+  // const [chats, setChats] = useState();
+  // console.log(user);
+
+
+  useEffect(() => {
+    console.log('chat useEFfect');
+    if (user?.id) {
+      dispatch(fetchAllConversations(user.id as string));
+
+    }
+  }, [user, dispatch]);
+
+  const setConversation = (user: User, userId: string) => {
+    dispatch(setSelectedConversation(user));
+    dispatch(setSelectedConversationId(userId))
+  }
+
   return (
     <div className="bg-gray-100  h-full overflow-y-auto">
       {/* Header */}
       <header className="p-4 bg-black text-white">
-        <h1 className="text-xl font-semibold">Kisaner Chat</h1>
+        <h1 className="text-xl font-semibold">Chat App</h1>
       </header>
 
       {/* Contact List */}
       <div className="p-3">
-        {chatUsers.length === 0 ? (
+        {chats.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-gray-500">No contacts available</p>
           </div>
         ) : (
-          chatUsers.map((user) => (
+          chats.map((chat) => (
             <div
-              key={user.id}
-              className="flex items-center mb-4 cursor-pointer hover:bg-gray-100 p-2 gap-x-2 rounded-md transition duration-200 ease-in-out"
-              onClick={() => fetchMessagesSelectUser(user.id)}
+              key={chat.id}
+              className={cn(`flex items-center mb-4 cursor-pointer hover:bg-gray-200 p-2 gap-x-2 rounded-md transition duration-200 ease-in-out ${chat.id === conversationUserId && 'bg-gray-300'}`)}
+              onClick={() => setConversation(chat.ConversationUser[0].user, chat.id as string)}
             >
               <Avatar className="h-10 w-10">
                 <AvatarImage
-                  src={user.image || '/default-avatar.png'}
-                  alt={user.name}
+                  src={chat.ConversationUser[0].user.image}
+                  alt={chat.ConversationUser[0].user.name}
                 />
-                <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                <AvatarFallback>
+                  {/* {user.ConversationUser[0].user.name} */}
+                  <FaUser className='w-4 h-4' />
+
+                </AvatarFallback>
               </Avatar>
 
               <div className="flex-1">
-                <h2 className="text-lg font-semibold text-black">{user.name || 'Unknown'}</h2>
-                <p className="text-gray-600 truncate">{user.lastMessage || 'No messages yet'}</p>
+                <h2 className="text-lg font-semibold text-black">{chat.ConversationUser[0].user.name || 'Unknown'}</h2>
+                <p className="text-gray-600 truncate">{chat?.lastMessage?.message || 'No messages yet'}</p>
                 <span className="text-sm text-gray-500">
-                  {user.lastMessageTime
-                    ? format(new Date(user.lastMessageTime), 'MMM dd, yyyy, h:mm a')
-                    : 'No messages yet'}
+                  {chat.lastMessageAt
+                    && format(new Date(chat.lastMessageAt), 'MMM dd, yyyy, h:mm a')
+                  }
                 </span>
               </div>
 
-              {user.unseenMessagesCount > 0 && (
+              {/* {chat. > 0 && (
                 <span className="ml-2 text-xs text-red-500 font-semibold bg-red-100 px-2 py-1 rounded-full">
                   {user.unseenMessagesCount} unread message(s)
                 </span>
-              )}
+              )} */}
             </div>
           ))
         )}

@@ -79,7 +79,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
       httpOnly: true, // Prevents access by JavaScript
       // secure: process.env.NODE_ENV === 'production', // Ensure cookie is only sent over HTTPS in production
       // sameSite: 'strict', // Helps with CSRF protection
-      maxAge: 60 * 60 * 1000 // Token expiry: 1 hour
+      maxAge: 60 * 600 * 1000 // Token expiry: 1 hour
     });
 
     res.status(200).json({

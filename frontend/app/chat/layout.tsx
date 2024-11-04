@@ -1,19 +1,18 @@
-import type { Metadata } from "next";
+'use client';
 
+import store from "@/redux/store";
+import { Provider } from "react-redux";
 
-export const metadata: Metadata = {
-  title: 'Kisaner - Market - Chat',
-  description: 'Explore various categories and latest posts on Kisaner Market.',
-};
-
-export default async function ChatLayout({
+export default function ChatLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <div>
-      {children}
-    </div>
+    <Provider store={store}>
+      <div>
+        {children}
+      </div>
+    </Provider>
   );
 }
