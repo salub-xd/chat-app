@@ -11,107 +11,88 @@ datasource db {
 }
 
 model User {
-  id                 String                @id @default(cuid())
-  name               String?
-  username           String?               @unique
-  bio                String?
-  email              String?               @unique
-  emailVerified      DateTime?
-  image              String?
-  coverImage         String?
-  password           String?
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
-  hasNotification    Boolean?
+  id              String    @id @default(cuid())
+  name            String?
+  username        String?   @unique
+  bio             String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  coverImage      String?
+  password        String?
+  isOAuth         Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  hasNotification Boolean?
 
-  accounts           Account[]
-  sentMessages       Message[]             @relation("SentMessages")
-  ConversationUser   ConversationUser[]
-  Reaction           Reaction[]
+  sentMessages         Message[]              @relation("SentMessages")
+  ConversationUser     ConversationUser[]
+  Reaction             Reaction[]
   NotificationSettings NotificationSettings[]
 }
 
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
 model Conversation {
-  id               String              @id @default(cuid())
-  lastMessageId    String?
-  lastMessageAt    DateTime?
-  isPinned         Boolean             @default(false)
-  isGroup          Boolean             @default(false)
-  adminId          String?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
+  id            String    @id @default(cuid())
+  lastMessageId String?
+  lastMessageAt DateTime?
+  isPinned      Boolean   @default(false)
+  isGroup       Boolean   @default(false)
+  adminId       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   // Named relations to avoid ambiguity
-  messages         Message[]           @relation("ConversationMessages")
-  lastMessage      Message?            @relation("LastMessage", fields: [lastMessageId], references: [id])
+  messages    Message[] @relation("ConversationMessages")
+  lastMessage Message?  @relation("LastMessage", fields: [lastMessageId], references: [id])
 
   ConversationUser ConversationUser[]
 }
 
 model Message {
-  id             String      @id @default(cuid())
+  id             String   @id @default(cuid())
   message        String
   senderId       String
-  isDelivered    Boolean     @default(false)
-  isRead         Boolean     @default(false)
-  createdAt      DateTime    @default(now())
+  isDelivered    Boolean  @default(false)
+  isRead         Boolean  @default(false)
+  createdAt      DateTime @default(now())
   conversationId String
 
-  sender         User        @relation("SentMessages", fields: [senderId], references: [id])
-  conversation   Conversation @relation("ConversationMessages", fields: [conversationId], references: [id])
+  sender       User         @relation("SentMessages", fields: [senderId], references: [id])
+  conversation Conversation @relation("ConversationMessages", fields: [conversationId], references: [id])
 
-  Reaction       Reaction[]
+  Reaction Reaction[]
 
   Conversation Conversation[] @relation("LastMessage")
 }
 
 model ConversationUser {
-  id             String       @id @default(cuid())
+  id             String  @id @default(cuid())
   conversationId String
   userId         String
-  unreadMessages Int          @default(0)
-  isAdmin        Boolean      @default(false)
-  isArchived     Boolean      @default(false)
+  unreadMessages Int     @default(0)
+  isAdmin        Boolean @default(false)
+  isArchived     Boolean @default(false)
 
-  conversation   Conversation @relation(fields: [conversationId], references: [id])
-  user           User         @relation(fields: [userId], references: [id])
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+  user         User         @relation(fields: [userId], references: [id])
 }
 
 model Reaction {
-  id        String   @id @default(cuid())
+  id        String @id @default(cuid())
   messageId String
   userId    String
   emoji     String
 
-  message   Message  @relation(fields: [messageId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  message Message @relation(fields: [messageId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
 }
 
 model NotificationSettings {
-  id              String   @id @default(cuid())
-  userId          String
-  muteUntil       DateTime?
-  allowPush       Boolean  @default(true)
-  allowEmail      Boolean  @default(false)
-  
-  user            User     @relation(fields: [userId], references: [id])
+  id         String    @id @default(cuid())
+  userId     String
+  muteUntil  DateTime?
+  allowPush  Boolean   @default(true)
+  allowEmail Boolean   @default(false)
+
+  user User @relation(fields: [userId], references: [id])
 }

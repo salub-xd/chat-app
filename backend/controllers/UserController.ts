@@ -338,6 +338,9 @@ export const googleAuth = async (req: Request, res: Response): Promise<void> => 
       }
     );
 
+    console.log(data);
+    
+
     const user = await prisma.user.findUnique({
       where: { email: data.email },
     });
@@ -350,9 +353,10 @@ export const googleAuth = async (req: Request, res: Response): Promise<void> => 
           email: data.email,
           name: data.given_name,
           username: username,
-          profileImage: data.picture,
+          image: data.picture,
           isOAuth: true,
         },
+
       });
     }
 

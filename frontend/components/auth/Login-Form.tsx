@@ -26,6 +26,7 @@ import Link from 'next/link';
 import { ClipLoader } from 'react-spinners';
 import { BsGoogle } from 'react-icons/bs';
 import axios from 'axios';
+import { Social } from './social-login';
 
 const LoginForm = () => {
 
@@ -144,10 +145,9 @@ const LoginForm = () => {
                         <span className="mx-2 text-sm text-gray-500">OR CONTINUE WITH</span>
                         <div className="border-t border-gray-300 flex-grow"></div>
                     </div>
-                    <Button
-                        className="w-full ">
-                        <BsGoogle className="mr-2" /> Sign in with Google
-                    </Button>
+                    <Social>
+                        
+                    </Social>
                 </form>
             </Form>
         </div>

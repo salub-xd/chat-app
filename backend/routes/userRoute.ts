@@ -18,9 +18,9 @@ import verify from "../middleware/verify";
 
 router.route('/registeruser').post(registerUser);
 router.route('/loginuser').post(loginUser);
+router.route('/auth/google').post(googleAuth);
 router.route('/edituser/:id').patch(verify,editUser);
 router.route('/deleteuser/:id').delete(verify,deleteUser);
-router.route('/auth/google').delete(googleAuth);
 router.route('/search/id/:id').get(verify,searchUserById);
 router.route('/search/username/:username').get(verify,searchUserByUsername);
 router.route('/search/name').get(verify,searchUserByName);
