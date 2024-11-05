@@ -176,9 +176,9 @@ export const socket = (io: Server) => {
           },
         });
 
-        socket.in(conversationId).emit('receive_message', savedMessage);
+        // socket.in(conversationId).emit('receive_message', savedMessage);
         // Send the message to both the sender's and receiver's rooms
-        // io.in(conversationId).emit('receive_message', savedMessage);
+        io.in(conversationId).emit('receive_message', savedMessage);
         console.log(`Message sent in room: ${conversationId}`);
       } catch (error) {
         console.error('Error saving or sending message:', error);
